@@ -21,7 +21,7 @@ _url_detect = 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&r
 
 _key_emotion = '57581a86d1854feeb598110c69eccb8a'  # primary key - emotion
 _key_video = '75e7945f0f4c460fb4039d967b4210af'  #  primary key - video
-_key_face = '8b457a38902d463f9a21af2620514c3a'   #  primary key - face
+_key_face = 'd889e25522734a708e584d45a8fc1a9c'   #  primary key - face
 
 _maxNumRetries = 10
 
@@ -199,26 +199,34 @@ def getEmotions(img):
     return result
 
 
-# createPersonGroup() # создали группу персонажей
-# a = createPerson()['personId']  # создали главного персонажа
-# addFace(a) # добавили лица персонажа
-# trainPersonGroup() # тренируем узнавать персонажа
-#
-# getTrainStatus() # проверяем, завершилась ли тренировка
+createPersonGroup() # создали группу персонажей
+a = createPerson()['personId']  # создали главного персонажа
+addFace(a) # добавили лица персонажа
+trainPersonGroup() # тренируем узнавать персонажа
 
-results = codecs.open('results.csv', 'w', 'utf-8')
+getTrainStatus() # проверяем, завершилась ли тренировка
+
+counter = 5
+results = codecs.open('results2.csv', 'w', 'utf-8')
 results.write('\t'.join(['picnum', 'sadness', 'neutral', 'contempt', 'disgust', 'anger', 'surprise', 'fear', 'happiness']) + '\r\n')
 for root, dirs, files in os.walk('images/movie_shots'):
     for f in files:
+        # if '23' not in f and '24' not in f and '25' not in f and '26' not in f:
+        print(f)
+        if counter > 10:
+            counter = 5
+            time.sleep(2 * counter)
+        counter += 2
+        img = os.path.join(root, f)
         try:
-            time.sleep(20)
-            img = os.path.join(root, f)
             people = findPerson(img)
-            main_hero = identify([d['faceId'] for d in people])
-            faceID = ''
-            faceRectangle = {}
-            print(main_hero)
-
+        except:
+            continue
+        main_hero = identify([d['faceId'] for d in people])
+        faceID = ''
+        faceRectangle = {}
+        print(main_hero)
+        if main_hero is not None:
             for i in main_hero:
                 if i['candidates']:
                     faceID = i['faceId']
@@ -233,16 +241,14 @@ for root, dirs, files in os.walk('images/movie_shots'):
                 for p in emotions:
                     if p['faceRectangle'] == faceRectangle:
                         r = '\t'.join(str(i) for i in [f, p['scores']['sadness'],
-                                                       p['scores']['neutral'],
-                                                       p['scores']['contempt'],
-                                                       p['scores']['disgust'],
-                                                       p['scores']['anger'],
-                                                       p['scores']['surprise'],
-                                                       p['scores']['fear'],
-                                                       p['scores']['happiness']])
+                                        p['scores']['neutral'],
+                                        p['scores']['contempt'],
+                                        p['scores']['disgust'],
+                                        p['scores']['anger'],
+                                        p['scores']['surprise'],
+                                         p['scores']['fear'],
+                                         p['scores']['happiness']])
                         results.write(r + '\r\n')
                         print(r)
-        except:
-            pass
 
 results.close()
