@@ -210,14 +210,15 @@ results = codecs.open('results.csv', 'w', 'utf-8')
 results.write('\t'.join(['picnum', 'sadness', 'neutral', 'contempt', 'disgust', 'anger', 'surprise', 'fear', 'happiness']) + '\r\n')
 for root, dirs, files in os.walk('images/movie_shots'):
     for f in files:
-        time.sleep(20)
-        img = os.path.join(root, f)
-        people = findPerson(img)
-        main_hero = identify([d['faceId'] for d in people])
-        faceID = ''
-        faceRectangle = {}
-        print(main_hero)
         try:
+            time.sleep(20)
+            img = os.path.join(root, f)
+            people = findPerson(img)
+            main_hero = identify([d['faceId'] for d in people])
+            faceID = ''
+            faceRectangle = {}
+            print(main_hero)
+
             for i in main_hero:
                 if i['candidates']:
                     faceID = i['faceId']
@@ -226,21 +227,22 @@ for root, dirs, files in os.walk('images/movie_shots'):
                             faceRectangle = p['faceRectangle']
                             break
                     break
+
+            if faceID and faceRectangle:
+                emotions = getEmotions(img)
+                for p in emotions:
+                    if p['faceRectangle'] == faceRectangle:
+                        r = '\t'.join(str(i) for i in [f, p['scores']['sadness'],
+                                                       p['scores']['neutral'],
+                                                       p['scores']['contempt'],
+                                                       p['scores']['disgust'],
+                                                       p['scores']['anger'],
+                                                       p['scores']['surprise'],
+                                                       p['scores']['fear'],
+                                                       p['scores']['happiness']])
+                        results.write(r + '\r\n')
+                        print(r)
         except:
             pass
-        if faceID and faceRectangle:
-            emotions = getEmotions(img)
-            for p in emotions:
-                if p['faceRectangle'] == faceRectangle:
-                    r = '\t'.join(str(i) for i in [f, p['scores']['sadness'],
-                                    p['scores']['neutral'],
-                                    p['scores']['contempt'],
-                                    p['scores']['disgust'],
-                                    p['scores']['anger'],
-                                    p['scores']['surprise'],
-                                     p['scores']['fear'],
-                                     p['scores']['happiness']])
-                    results.write(r + '\r\n')
-                    print(r)
 
 results.close()
